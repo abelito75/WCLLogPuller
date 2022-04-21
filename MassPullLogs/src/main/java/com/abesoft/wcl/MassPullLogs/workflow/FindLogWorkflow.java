@@ -17,17 +17,40 @@ import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
 import com.abesoft.wcl.MassPullLogs.request.fragments.CharacterRankingsFragment;
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * This workflow is to find a singular log. The mentality behind it is 
+ * attempting to find a single trinket or a person using a niche trinket
+ *
+ * @author Abelito75
+ *
+ */
 public abstract class FindLogWorkflow extends AbstractWorkFlow {
 
+	/**
+	 * Name the file will be
+	 */
 	private String name;
+	/**
+	 * List of bosses to look at
+	 */
 	private List<Boss> bosses;
-	
+	/**
+	 * The log we found
+	 */
 	private LogData log;
 	
-	public FindLogWorkflow(String name) throws IOException {
+	/**
+	 * Create this
+	 * @param name What the file will be named
+	 */
+	public FindLogWorkflow(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * Set bosses to query
+	 * @param bosses bosses to query
+	 */
 	public void setBosses(List<Boss> bosses) {
 		this.bosses = bosses;
 	}
@@ -114,6 +137,9 @@ public abstract class FindLogWorkflow extends AbstractWorkFlow {
 		}
 	}
 	
+	/**
+	 * The the data to file
+	 */
 	public void writeToFile() {
 		String toWrite = "Couldn't find a log";
 		if(log != null) {
@@ -123,7 +149,6 @@ public abstract class FindLogWorkflow extends AbstractWorkFlow {
 		try {
 			Files.writeString(Paths.get(name + ".csv"), toWrite);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

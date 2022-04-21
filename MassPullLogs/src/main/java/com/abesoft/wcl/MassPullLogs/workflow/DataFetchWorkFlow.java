@@ -26,19 +26,36 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
+	/**
+	 * Name of file to save to
+	 */
 	private String name;
+	/**
+	 * List of bosses to query
+	 */
 	private List<Boss> bosses;
-
+	/**
+	 * List of logs, this should be at max 100 at a time 
+	 */
 	private List<LogData> logs;
-
+	/**
+	 * Our cute little file writer
+	 */
 	private CSVOutput output;
-
+	/**
+	 * Cute little creator
+	 * @param name The name the file will be
+	 * @throws IOException for creation of the FileWriter
+	 */
 	public DataFetchWorkFlow(String name) throws IOException {
 		this.name = name;
 		logs = new ArrayList<>();
 		output = new CSVOutput(new File(name + ".csv"));
 	}
-
+	/**
+	 * Bosses to look against
+	 * @param bosses the bosses duh
+	 */
 	public void setBosses(List<Boss> bosses) {
 		this.bosses = bosses;
 	}
@@ -50,10 +67,23 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 */
 	public abstract CharacterRankingsFragment generateFragment();
 
+	/**
+	 * The queries you want query for a log
+	 * @param data the log data, used for setting sourceID and what not
+	 * @return A list of fragments to query against
+	 */
 	public abstract List<TableFragment> generateFragmentForLog(LogData data);
 
+	/**
+	 * This method will parse data from a log. You will have the WCL data tables you made in data
+	 * @param data the log to extract and store data in/from
+	 */
 	public abstract void parseData(LogData data);
-
+	
+	/**
+	 * Run the data dive
+	 * @param pages How many WCL pages you want to query. Each page is 100 logs.
+	 */
 	public void run(int pages) {
 		System.out.println("Bosses we are attempting to query: "
 				+ bosses.stream().map(e -> e.getName()).collect(Collectors.joining(", ")));
@@ -211,6 +241,8 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 	/**
 	 * Gets the id for the player and all his pets
+	 * The data is stored in petIDs and sourceID
+	 * To access petIDs requires a nasty untyped cast
 	 * 
 	 * @throws UnsupportedEncodingException
 	 * @throws AuthenticationException
@@ -257,15 +289,21 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	public boolean isDirtyData(LogData data) {
 		return data.getSourceID() == null || data.getSourceID().isBlank();
 	}
-
-	public List<LogData> getLogData() {
-		return logs;
-	}
-
+	
+	/**
+	 * get the name... duh
+	 * @return the name
+	 */
 	public String getName() {
 		return name;
 	}
-
+	
+	/**
+	 * The data query
+	 * @param dataUnit the log we are acting on
+	 * @throws AuthenticationException
+	 * @throws UnsupportedEncodingException
+	 */
 	public void getData(LogData dataUnit) throws AuthenticationException, UnsupportedEncodingException {
 		String queryHeader = "{reportData{report(code:\"";
 		String queryMiddle = "\"){";
@@ -299,6 +337,11 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 	}
 
+	/**
+	 * Writes a single log to a file
+	 * This does instantly flush. So its not super optimal
+	 * @param dataUnit log to write
+	 */
 	public void writeData(LogData dataUnit) {
 		try {
 			output.writeRecord(dataUnit);
