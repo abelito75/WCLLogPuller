@@ -27,14 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 public abstract class FindLogWorkflow extends AbstractWorkFlow {
 
 	/**
-	 * Name the file will be
-	 */
-	private String name;
-	/**
-	 * List of bosses to look at
-	 */
-	private List<Boss> bosses;
-	/**
 	 * The log we found
 	 */
 	private LogData log;
@@ -44,23 +36,8 @@ public abstract class FindLogWorkflow extends AbstractWorkFlow {
 	 * @param name What the file will be named
 	 */
 	public FindLogWorkflow(String name) {
-		this.name = name;
+		super(name);
 	}
-
-	/**
-	 * Set bosses to query
-	 * @param bosses bosses to query
-	 */
-	public void setBosses(List<Boss> bosses) {
-		this.bosses = bosses;
-	}
-	
-	/**
-	 * DO NOT include the PAGE number you want. THIS IS HANDLED IN RUN
-	 * 
-	 * @return
-	 */
-	public abstract CharacterRankingsFragment generateFragment();
 
 	/**
 	 * 10 pages - 1000 logs
@@ -78,69 +55,20 @@ public abstract class FindLogWorkflow extends AbstractWorkFlow {
 				}
 			}
 		}
-		writeToFile();
+		writeToFile(log);
 	}
 	
-	/**
-	 * Queries for top logs from requested fragment Will generate LogData holders
-	 * that contain
-	 * <ul>
-	 * <li>Character name</li>
-	 * <li>Character Class</li>
-	 * <li>Character Spec</li>
-	 * <li>Report Code</li>
-	 * <li>Fight ID</li>
-	 * </ul>
-	 * 
-	 * @param toGet
-	 */
-	public void getLogs(int page, Boss boss) {
-		CharacterRankingsFragment toGet = generateFragment();
-		toGet.setPage(page);
-		String queryHeader = "{worldData{encounter(id: ";
-		String queryEnder = "){id,name," + toGet.buildFragment() + "}}}";
 
-		String query = queryHeader + boss.getID() + queryEnder;
-
-		GenericGraphQLRequest request = new GenericGraphQLRequest();
-		try {
-			request.buildRequest(query);
-			request.setAuth();
-
-			request.fireRequest();
-			JsonNode node = request.getJSON();
-			JsonNode encounter = node.get("data").get("worldData").get("encounter");
-
-			JsonNode rankings = encounter.get("characterRankings").get("rankings");
-			for (JsonNode rank : rankings) {
-				LogData dataUnit = new LogData();
-
-				dataUnit.disableAllFields();
-				dataUnit.getField(DefaultField.BOSS_NAME.getOutputName()).setOutputField(true);
-				dataUnit.getField(DefaultField.PLAYER_NAME.getOutputName()).setOutputField(true);
-
-				dataUnit.setBossName(encounter.get("name").asText());
-
-				dataUnit.setPlayerName(rank.get("name").asText());
-				dataUnit.setPlayerClass(rank.get("class").asText());
-				dataUnit.setPlayerSpec(rank.get("spec").asText());
-
-				JsonNode reportNode = rank.get("report");
-				dataUnit.setReportCode(reportNode.get("code").asText());
-				dataUnit.setFightID(reportNode.get("fightID").asText());
-				dataUnit.outputWCLLink();
-
-				log = dataUnit;
-				break;
-			}
-		} catch (AuthenticationException | UnsupportedEncodingException e) {
-		}
+	@Override
+	protected boolean logGatheredHook(LogData dataUnit) {
+		log = dataUnit;
+		return true;
 	}
 	
 	/**
 	 * The the data to file
 	 */
-	public void writeToFile() {
+	public void writeToFile(LogData dataUnit) {
 		String toWrite = "Couldn't find a log";
 		if(log != null) {
 			toWrite = log.getValue("wclLink").toString();

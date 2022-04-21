@@ -15,6 +15,7 @@ import java.util.stream.StreamSupport;
 
 import org.apache.http.auth.AuthenticationException;
 
+import com.abesoft.wcl.MassPullLogs.JsonLib;
 import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
 import com.abesoft.wcl.MassPullLogs.output.CSVOutput;
@@ -26,14 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
-	/**
-	 * Name of file to save to
-	 */
-	private String name;
-	/**
-	 * List of bosses to query
-	 */
-	private List<Boss> bosses;
 	/**
 	 * List of logs, this should be at max 100 at a time 
 	 */
@@ -48,24 +41,10 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * @throws IOException for creation of the FileWriter
 	 */
 	public DataFetchWorkFlow(String name) throws IOException {
-		this.name = name;
+		super(name);
 		logs = new ArrayList<>();
 		output = new CSVOutput(new File(name + ".csv"));
 	}
-	/**
-	 * Bosses to look against
-	 * @param bosses the bosses duh
-	 */
-	public void setBosses(List<Boss> bosses) {
-		this.bosses = bosses;
-	}
-
-	/**
-	 * DO NOT include the PAGE number you want. THIS IS HANDLED IN RUN
-	 * 
-	 * @return
-	 */
-	public abstract CharacterRankingsFragment generateFragment();
 
 	/**
 	 * The queries you want query for a log
@@ -126,7 +105,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 						continue;
 					}
 
-					writeData(data);
+					writeToFile(data);
 				}
 				System.out.println("Logs fully processed " + logs.size() + ". Moving onto next bunch");
 
@@ -172,63 +151,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	}
 
 	/**
-	 * Queries for top logs from requested fragment Will generate LogData holders
-	 * that contain
-	 * <ul>
-	 * <li>Character name</li>
-	 * <li>Character Class</li>
-	 * <li>Character Spec</li>
-	 * <li>Report Code</li>
-	 * <li>Fight ID</li>
-	 * </ul>
-	 * 
-	 * @param toGet
-	 */
-	public boolean getLogs(int page, Boss boss) {
-		CharacterRankingsFragment toGet = generateFragment();
-		toGet.setPage(page);
-		String queryHeader = "{worldData{encounter(id: ";
-		String queryEnder = "){id,name," + toGet.buildFragment() + "}}}";
-
-		String query = queryHeader + boss.getID() + queryEnder;
-
-		GenericGraphQLRequest request = new GenericGraphQLRequest();
-		try {
-			request.buildRequest(query);
-			request.setAuth();
-
-			request.fireRequest();
-			JsonNode node = request.getJSON();
-			JsonNode encounter = node.get("data").get("worldData").get("encounter");
-
-			JsonNode rankings = encounter.get("characterRankings").get("rankings");
-			for (JsonNode rank : rankings) {
-				LogData dataUnit = new LogData();
-
-				dataUnit.disableAllFields();
-				dataUnit.getField(DefaultField.BOSS_NAME.getOutputName()).setOutputField(true);
-				dataUnit.getField(DefaultField.PLAYER_NAME.getOutputName()).setOutputField(true);
-
-				dataUnit.setBossName(encounter.get("name").asText());
-
-				dataUnit.setPlayerName(rank.get("name").asText());
-				dataUnit.setPlayerClass(rank.get("class").asText());
-				dataUnit.setPlayerSpec(rank.get("spec").asText());
-
-				JsonNode reportNode = rank.get("report");
-				dataUnit.setReportCode(reportNode.get("code").asText());
-				dataUnit.setFightID(reportNode.get("fightID").asText());
-				dataUnit.outputWCLLink();
-
-				logs.add(dataUnit);
-			}
-		} catch (AuthenticationException | UnsupportedEncodingException e) {
-			return false;
-		}
-		return true;
-	}
-
-	/**
 	 * These logs can't be used as there is no real way to get the sourceID for the
 	 * player in question easily This might find someone actually named Anonymous
 	 * who isn't anonymously logging but w/e we are talking about a 1% error rate at
@@ -258,7 +180,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		request.setAuth();
 		request.fireRequest();
 		JsonNode root = request.getJSON();
-		JsonNode actors = root.get("data").get("reportData").get("report").get("masterData").get("actors");
+		JsonNode actors = JsonLib.travelDownTree(root, "data/reportData/report/masterData/actors");
 
 		StreamSupport.stream(actors.spliterator(), false)
 				.filter(e -> e.get("name").asText().equals(data.getPlayerName())).findFirst()
@@ -324,8 +246,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		request.setAuth();
 		request.fireRequest();
 		JsonNode root = request.getJSON();
-
-		JsonNode tableRoot = root.get("data").get("reportData").get("report");
+		JsonNode tableRoot = JsonLib.travelDownTree(root, "data/reportData/report");
 
 		Map<String, JsonNode> dataMapping = new LinkedHashMap<>();
 
@@ -337,12 +258,18 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 	}
 
+	@Override
+	protected boolean logGatheredHook(LogData dataUnit) {
+		logs.add(dataUnit);
+		return false;
+	}
+
 	/**
 	 * Writes a single log to a file
 	 * This does instantly flush. So its not super optimal
 	 * @param dataUnit log to write
 	 */
-	public void writeData(LogData dataUnit) {
+	public void writeToFile(LogData dataUnit) {
 		try {
 			output.writeRecord(dataUnit);
 		} catch (IOException e) {

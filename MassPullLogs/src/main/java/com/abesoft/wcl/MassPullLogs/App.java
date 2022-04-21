@@ -49,7 +49,6 @@ public class App {
 				toGet.setIncludeCombatantInfo(false);
 				return toGet;
 			}
-			
 		};
 		
 		List<Boss> bossesToQuery = Arrays.asList(Boss.values()).stream().filter(boss -> boss != Boss.VIGILANT_GUARDIAN)
