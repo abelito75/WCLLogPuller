@@ -19,6 +19,7 @@ import com.abesoft.wcl.MassPullLogs.request.constants.ViewType;
 import com.abesoft.wcl.MassPullLogs.request.fragments.CharacterRankingsFragment;
 import com.abesoft.wcl.MassPullLogs.request.fragments.TableFragment;
 import com.abesoft.wcl.MassPullLogs.workflow.DataFetchWorkFlow;
+import com.abesoft.wcl.MassPullLogs.workflow.FindLogWorkflow;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
@@ -28,7 +29,36 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class App {
 
 	public static void main(String[] args) throws IOException, InterruptedException, AuthenticationException {
+		
+		//testFind();
+		//testDataQuery();
+		
+	}
+	
+	private static void testFind() throws IOException {
+		FindLogWorkflow findFlow = new FindLogWorkflow("TestFind") {
 
+			@Override
+			public CharacterRankingsFragment generateFragment() {
+				CharacterRankingsFragment toGet = new CharacterRankingsFragment();
+				toGet.setClassName(ClassSpec.MONK_WINDWALKER);
+				toGet.setSpecName(ClassSpec.MONK_WINDWALKER);
+				toGet.setMetric(Metric.DPS);
+				toGet.setDifficulity(Difficulty.HEROIC);
+				toGet.setCovenantID(Covenant.VENTHYR);
+				toGet.setIncludeCombatantInfo(false);
+				return toGet;
+			}
+			
+		};
+		
+		List<Boss> bossesToQuery = Arrays.asList(Boss.values()).stream().filter(boss -> boss != Boss.VIGILANT_GUARDIAN)
+				.toList();
+		findFlow.setBosses(bossesToQuery);
+		findFlow.find();
+	}
+	
+	private static void testDataQuery() throws IOException {
 		DataFetchWorkFlow flow = new DataFetchWorkFlow("WWFOData") {
 
 			@Override
@@ -102,7 +132,6 @@ public class App {
 		List<Boss> bossesToQuery = Arrays.asList(Boss.values()).stream().filter(boss -> boss != Boss.VIGILANT_GUARDIAN)
 				.toList();
 		flow.setBosses(bossesToQuery);
-
 		flow.run(2);
 	}
 
