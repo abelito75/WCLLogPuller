@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * This defines a singular log It contains hardcoded fields that are required to
  * do most wcl requests It also contains an map that allows someone to store
@@ -144,6 +146,11 @@ public class LogData {
 
 	public void setSourceID(Object value) {
 		setFieldValue(DefaultField.SOURCE_ID.getOutputName(), value);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, JsonNode> getTables() {	
+		return (Map<String, JsonNode>)getField("Tables").getValue();
 	}
 
 	/**

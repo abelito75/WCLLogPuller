@@ -78,7 +78,7 @@ public class App {
 				int fofCasts = 0;
 				int foSummons = 0;
 
-				Map<String, JsonNode> tables = (Map<String, JsonNode>) data.getField("Tables").getValue();
+				Map<String, JsonNode> tables = data.getTables();
 				JsonNode statsNode = tables.get("stats").get("data").get("combatantInfo").get("stats");
 				haste = statsNode.get("Haste").get("max").asInt();
 

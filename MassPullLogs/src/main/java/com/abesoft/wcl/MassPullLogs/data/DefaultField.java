@@ -1,5 +1,9 @@
 package com.abesoft.wcl.MassPullLogs.data;
 
+import java.util.LinkedHashMap;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 public enum DefaultField {
 
 	BOSS_NAME(new Field("", true, "Boss Name")),
@@ -14,7 +18,9 @@ public enum DefaultField {
 
 	FIGHT_ID(new Field("", true, "FightID")),
 
-	SOURCE_ID(new Field("", true, "SouceID"));
+	SOURCE_ID(new Field("", true, "SouceID")),
+	
+	TALBES(new Field(new LinkedHashMap<String, JsonNode>(), false, "Tables"));
 
 	private Field field;
 
