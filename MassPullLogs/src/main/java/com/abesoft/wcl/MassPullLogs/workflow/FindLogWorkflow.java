@@ -121,7 +121,7 @@ public abstract class FindLogWorkflow extends AbstractWorkFlow {
 		}
 		
 		try {
-			Files.writeString(Paths.get(name + ".txt"), toWrite);
+			Files.writeString(Paths.get(name + ".csv"), toWrite);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
