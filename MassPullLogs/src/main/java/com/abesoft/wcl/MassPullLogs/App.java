@@ -79,18 +79,19 @@ public class App {
 				int foSummons = 0;
 
 				Map<String, JsonNode> tables = data.getTables();
-				JsonNode statsNode = tables.get("stats").get("data").get("combatantInfo").get("stats");
-				haste = statsNode.get("Haste").get("max").asInt();
+				
+				JsonNode statsNode = tables.get("stats");
+				JsonNode hasteNode = JsonLib.travelDownTree(statsNode, "data/combatantInfo/stats/Haste/max");
+				if(hasteNode != null) {
+					haste = hasteNode.asInt();
 
-				JsonNode castsNode = tables.get("casts").get("data").get("entries");
-				for (JsonNode node : castsNode) {
-					fofCasts += node.get("total").asInt();
 				}
+				
+				JsonNode castsNode = tables.get("casts");
+				fofCasts = JsonLib.totalEntriesFromRoot(castsNode);
 
-				JsonNode summonsNode = tables.get("summons").get("data").get("entries");
-				for (JsonNode node : summonsNode) {
-					foSummons += node.get("total").asInt();
-				}
+				JsonNode summonsNode = tables.get("summons");
+				foSummons = JsonLib.totalEntriesFromRoot(summonsNode);
 
 				data.setFieldValue("haste", haste, true, "Haste");
 				data.setFieldValue("fofCasts", fofCasts, true, "FoF Casts");
