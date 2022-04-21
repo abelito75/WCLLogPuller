@@ -20,7 +20,7 @@ public class AuthRequest extends AbstractRequest {
 		params.add(new BasicNameValuePair("grant_type", "client_credentials"));
 		addEntity(params);
 
-		List<String> credsToLoad = Files.readAllLines(Paths.get("creds.txt"));
+		List<String> credsToLoad = Files.readAllLines(Paths.get("creds.creds"));
 		if (credsToLoad.size() != 2) {
 			throw new RuntimeException("Invalid amount of Creds");
 		}
