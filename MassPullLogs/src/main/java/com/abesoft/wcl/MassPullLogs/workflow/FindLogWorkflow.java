@@ -1,21 +1,13 @@
 package com.abesoft.wcl.MassPullLogs.workflow;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.stream.IntStream;
 
-import org.apache.http.auth.AuthenticationException;
 
-import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
-import com.abesoft.wcl.MassPullLogs.request.GenericGraphQLRequest;
 import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
-import com.abesoft.wcl.MassPullLogs.request.fragments.CharacterRankingsFragment;
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * This workflow is to find a singular log. The mentality behind it is 

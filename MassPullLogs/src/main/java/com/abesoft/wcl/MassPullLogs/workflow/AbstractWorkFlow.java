@@ -4,8 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.auth.AuthenticationException;
-
 import com.abesoft.wcl.MassPullLogs.JsonLib;
 import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
@@ -74,8 +72,6 @@ public abstract class AbstractWorkFlow {
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		try {
 			request.buildRequest(query);
-			request.setAuth();
-
 			request.fireRequest();
 			JsonNode node = request.getJSON();
 			
@@ -105,7 +101,7 @@ public abstract class AbstractWorkFlow {
 					return breakerHook;
 				}
 			}
-		} catch (AuthenticationException | UnsupportedEncodingException e) {
+		} catch (UnsupportedEncodingException e) {
 			return false;
 		}
 		return true;

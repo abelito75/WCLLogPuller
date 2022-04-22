@@ -16,12 +16,10 @@ import java.util.stream.StreamSupport;
 import org.apache.http.auth.AuthenticationException;
 
 import com.abesoft.wcl.MassPullLogs.JsonLib;
-import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
 import com.abesoft.wcl.MassPullLogs.output.CSVOutput;
 import com.abesoft.wcl.MassPullLogs.request.GenericGraphQLRequest;
 import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
-import com.abesoft.wcl.MassPullLogs.request.fragments.CharacterRankingsFragment;
 import com.abesoft.wcl.MassPullLogs.request.fragments.TableFragment;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -177,7 +175,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		request.buildRequest(query);
-		request.setAuth();
 		request.fireRequest();
 		JsonNode root = request.getJSON();
 		JsonNode actors = JsonLib.travelDownTree(root, "data/reportData/report/masterData/actors");
@@ -243,7 +240,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		request.buildRequest(query);
-		request.setAuth();
 		request.fireRequest();
 		JsonNode root = request.getJSON();
 		JsonNode tableRoot = JsonLib.travelDownTree(root, "data/reportData/report");

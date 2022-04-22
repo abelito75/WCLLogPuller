@@ -31,7 +31,7 @@ public class App {
 	public static void main(String[] args) throws IOException, InterruptedException, AuthenticationException {
 		
 		//testFind();
-		//testDataQuery();
+		testDataQuery();
 		
 	}
 	

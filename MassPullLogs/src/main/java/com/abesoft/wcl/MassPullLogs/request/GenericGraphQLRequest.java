@@ -32,7 +32,17 @@ public class GenericGraphQLRequest extends AbstractRequest {
 	}
 	
 	public boolean fireRequest() {
+		try {
+			return fireRequestImp();
+		} catch (AuthenticationException | UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean fireRequestImp() throws AuthenticationException, UnsupportedEncodingException {
 		KeyMonitor.getMonitor().requestFired();
+		setAuth();
 		return super.fireRequest();
 	}
 
