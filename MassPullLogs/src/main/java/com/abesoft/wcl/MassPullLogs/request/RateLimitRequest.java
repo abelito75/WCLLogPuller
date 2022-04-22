@@ -9,9 +9,9 @@ import org.apache.http.auth.AuthenticationException;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
-public class GenericGraphQLRequest extends AbstractRequest {
+public class RateLimitRequest extends AbstractRequest {
 
-	public GenericGraphQLRequest() {
+	public RateLimitRequest() {
 		super(WCLURL.QUERY_REQEST.getURL());
 	}
 
@@ -32,7 +32,6 @@ public class GenericGraphQLRequest extends AbstractRequest {
 	}
 	
 	public boolean fireRequest() {
-		KeyMonitor.getMonitor().requestFired();
 		return super.fireRequest();
 	}
 
