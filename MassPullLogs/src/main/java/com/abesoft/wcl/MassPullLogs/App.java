@@ -31,7 +31,7 @@ public class App {
 	public static void main(String[] args) throws IOException, InterruptedException, AuthenticationException {
 		
 		//testFind();
-		testDataQuery();
+		//testDataQuery();
 		
 	}
 	
@@ -62,7 +62,6 @@ public class App {
 
 			@Override
 			public CharacterRankingsFragment generateFragment() {
-
 				CharacterRankingsFragment toGet = new CharacterRankingsFragment();
 				toGet.setClassName(ClassSpec.MONK_WINDWALKER);
 				toGet.setSpecName(ClassSpec.MONK_WINDWALKER);

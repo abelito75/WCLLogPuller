@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class KeyMonitor {
 
 	private static final String query = "{rateLimitData{limitPerHour, pointsSpentThisHour, pointsResetIn}}";
+	private static long second = 60000;
 	private static KeyMonitor watcher;
 
 	public static KeyMonitor getMonitor() {
@@ -36,21 +37,22 @@ public class KeyMonitor {
 	}
 	
 	private int limit;
-	
 	private int currentPointsUsed;
-	private int requests;
 	private int resetsIn;
-	
 	private int pointsPerRequest;
+	private int totalRequests;
+	private int requests;
+	private long lastRefreshTime;
 	
 	private KeyMonitor() {
 		limit = 0;
-		
 		currentPointsUsed = -1;
-		requests = 0;
 		resetsIn = 0;
-		
 		pointsPerRequest = 5;
+		totalRequests = 0;
+		requests = 0;
+		lastRefreshTime = System.currentTimeMillis();
+
 		
 		gatherInfo();
 	}
@@ -61,14 +63,44 @@ public class KeyMonitor {
 	 * The assumption made with this call should be a rich blend meaning we are over estimating 
 	 */
 	public void requestFired() {
+		totalRequests += 1;
 		requests += 1;
 		currentPointsUsed += pointsPerRequest;
 		
-		if(requests != 0 && requests % 20 == 0) {
+		
+		manageRequests();
+		
+		if(totalRequests != 0 && totalRequests % 20 == 0) {
 			gatherInfo();
 		}
 		
 		maybeSleep();
+	}
+
+	/**
+	 * Manage max requests per minute 
+	 * The actual limit of this is 600 requests per minute but we play it safe with 500
+	 * The cooldown is only a minute so its not the end of the world IMO
+	 */
+	private void manageRequests() {
+		long currentTime = System.currentTimeMillis();
+		if(requests >= 500) {
+			long waitTime = currentTime - lastRefreshTime;
+			try {
+				Thread.sleep(waitTime);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// get current time again
+			currentTime = System.currentTimeMillis();
+		}
+		
+		if(currentTime > lastRefreshTime + second) {
+			lastRefreshTime = currentTime;
+			requests = 0;
+		}
+		
 	}
 
 	public void gatherInfo() {
