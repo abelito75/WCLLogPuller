@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
@@ -87,23 +88,41 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 				System.out.println("Number of Logs Gathered: " + logs.size());
 
 				removeAnonymous();
+				
+				// divide up into segments
+				// we are gonna give each thread 25 logs. If there are less than 25 logs then only 1 thread will handle it
+				List<List<LogData>> segmentData = new ArrayList<>();
+				int i = 0;
+				for(LogData data : logs) {
+					int listToUse = i / 25;
+					if(segmentData.size() <= listToUse) {
+						List<LogData> listData = new ArrayList<>();
+						segmentData.add(listData);
+					}
+					segmentData.get(listToUse).add(data);
+					i++;
+				}
+				
 
 				System.out.println("None Anonymous Logs: " + logs.size());
-				for (LogData data : logs) {
-					attempts = 0;
-					while (attempts < 2 && !runWorkflow(data)) {
-						attempts++;
-					}
-
-					if (attempts == 2) {
-						System.out.println("Attempting to get data for " + data.getValue("wclLink") + " failed.");
-						continue;
-					}
-
-					writeToFile(data);
+				CountDownLatch startSignal = new CountDownLatch(1);
+				CountDownLatch endSignal = new CountDownLatch(segmentData.size());
+				
+				
+				
+				for (List<LogData> data : segmentData) {
+					new Thread(new Worker(data, startSignal, endSignal)).start();
 				}
+				startSignal.countDown();
+				try {
+					endSignal.await();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 				System.out.println("Logs fully processed " + logs.size() + ". Moving onto next bunch");
-
+				
 			}
 		}
 		try {
@@ -111,6 +130,43 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	private class Worker implements Runnable {
+		
+		private List<LogData> segment;
+		private CountDownLatch start;
+		private CountDownLatch end;
+		
+		public Worker(List<LogData> data, CountDownLatch start, CountDownLatch end) {
+			segment = data;
+			this.start = start;
+			this.end = end;
+		}
+
+		@Override
+		public void run() {
+			try {
+				start.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (LogData data : segment) {
+				int attempts = 0;
+				while (attempts < 2 && !runWorkflow(data)) {
+					attempts++;
+				}
+
+				if (attempts == 2) {
+					System.out.println("Attempting to get data for " + data.getValue("wclLink") + " failed.");
+					continue;
+				}
+
+				writeToFile(data);
+			}
+			end.countDown();
 		}
 	}
 
@@ -262,7 +318,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * This does instantly flush. So its not super optimal
 	 * @param dataUnit log to write
 	 */
-	public void writeToFile(LogData dataUnit) {
+	public synchronized void writeToFile(LogData dataUnit) {
 		try {
 			output.writeRecord(dataUnit);
 		} catch (IOException e) {

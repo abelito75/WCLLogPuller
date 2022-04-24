@@ -31,7 +31,7 @@ public class App {
 	public static void main(String[] args) throws IOException, InterruptedException, AuthenticationException {
 		
 		//testFind();
-		//testDataQuery();
+		testDataQuery();
 		
 	}
 	
@@ -58,6 +58,8 @@ public class App {
 	}
 	
 	private static void testDataQuery() throws IOException {
+		Date start = new Date();
+		
 		DataFetchWorkFlow flow = new DataFetchWorkFlow("WWFOData") {
 
 			@Override
@@ -131,6 +133,10 @@ public class App {
 				.toList();
 		flow.setBosses(bossesToQuery);
 		flow.run(2);
+		Date endDate = new Date();
+		
+		System.out.println("Duration of test: " + timeDifference(start,endDate));
+		
 	}
 
 	private static String timeDifference(Date startDate, Date endDate) {
