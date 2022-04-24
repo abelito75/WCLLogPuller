@@ -4,6 +4,8 @@
 package com.abesoft.wcl.MassPullLogs.request.monitor;
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.http.auth.AuthenticationException;
 
@@ -36,25 +38,25 @@ public class KeyMonitor {
 		return watcher;
 	}
 	
-	private int limit;
-	private int currentPointsUsed;
-	private int resetsIn;
-	private int pointsPerRequest;
-	private int totalRequests;
-	private int requests;
-	private long lastRefreshTime;
+	private AtomicInteger limit;
+	private AtomicInteger currentPointsUsed;
+	private AtomicInteger resetsIn;
+	private AtomicInteger pointsPerRequest;
+	private AtomicInteger totalRequests;
+	private AtomicInteger requests;
+	private AtomicLong lastRefreshTime;
 	
 	private KeyMonitor() {
-		limit = 0;
-		currentPointsUsed = -1;
-		resetsIn = 0;
-		pointsPerRequest = 5;
-		totalRequests = 0;
-		requests = 0;
-		lastRefreshTime = System.currentTimeMillis();
+		limit = new AtomicInteger(0);
+		currentPointsUsed = new AtomicInteger(-5);
+		resetsIn = new AtomicInteger(0);
+		pointsPerRequest = new AtomicInteger(5);
+		totalRequests = new AtomicInteger(0);
+		requests = new AtomicInteger(0);
+		lastRefreshTime = new AtomicLong(System.currentTimeMillis());
 
 		
-		gatherInfo();
+		gatherInfo(currentPointsUsed.get());
 	}
 
 	/**
@@ -63,18 +65,18 @@ public class KeyMonitor {
 	 * The assumption made with this call should be a rich blend meaning we are over estimating 
 	 */
 	public void requestFired() {
-		totalRequests += 1;
-		requests += 1;
-		currentPointsUsed += pointsPerRequest;
+		int tRequests = totalRequests.getAndIncrement();
+		int cRequests = requests.getAndIncrement();
+		int cPoints = currentPointsUsed.getAndAdd(pointsPerRequest.get());
 		
 		
-		manageRequests();
+		manageRequests(cRequests);
 		
-		if(totalRequests != 0 && totalRequests % 20 == 0) {
-			gatherInfo();
+		if(tRequests != 0 && tRequests % 20 == 0) {
+			gatherInfo(cPoints);
 		}
 		
-		maybeSleep();
+		maybeSleep(cPoints);
 	}
 
 	/**
@@ -82,10 +84,10 @@ public class KeyMonitor {
 	 * The actual limit of this is 600 requests per minute but we play it safe with 500
 	 * The cooldown is only a minute so its not the end of the world IMO
 	 */
-	private void manageRequests() {
+	private void manageRequests(int currentRequests) {
 		long currentTime = System.currentTimeMillis();
-		if(requests >= 500) {
-			long waitTime = currentTime - lastRefreshTime;
+		if(currentRequests >= 500) {
+			long waitTime = currentTime - lastRefreshTime.get();
 			try {
 				Thread.sleep(waitTime);
 			} catch (InterruptedException e) {
@@ -96,14 +98,14 @@ public class KeyMonitor {
 			currentTime = System.currentTimeMillis();
 		}
 		
-		if(currentTime > lastRefreshTime + second) {
-			lastRefreshTime = currentTime;
-			requests = 0;
+		if(currentTime > lastRefreshTime.get() + second) {
+			lastRefreshTime.set(currentTime);
+			requests.set(0);
 		}
 		
 	}
 
-	public void gatherInfo() {
+	public void gatherInfo(int cPoints) {
 		
 		RateLimitRequest request = new RateLimitRequest();
 		try {
@@ -114,7 +116,7 @@ public class KeyMonitor {
 			
 			JsonNode rateLimitData = JsonLib.travelDownTree(root, "data/rateLimitData");
 			
-			limit = rateLimitData.get("limitPerHour").asInt();
+			limit.set(rateLimitData.get("limitPerHour").asInt());
 			
 			int resetsInNow = rateLimitData.get("pointsResetIn").asInt();
 			
@@ -123,13 +125,13 @@ public class KeyMonitor {
 			// this is some `lets figure out how far off and adjust to that math`
 			// currentPointsUsed only = -1 on init call
 			// if resetsInNow > resetsIn then points have reset don't remath
-			if(currentPointsUsed != -1 && resetsInNow < resetsIn) {
-				double pointRatio = realPointsSpent / ((double) currentPointsUsed);
-				pointsPerRequest = (int) Math.round(pointsPerRequest * pointRatio);
+			if(cPoints != -1 && resetsInNow < resetsIn.get()) {
+				double pointRatio = realPointsSpent / ((double) cPoints);
+				pointsPerRequest.set((int) Math.round(pointsPerRequest.get() * pointRatio));
 			}
 			
-			resetsIn = resetsInNow;
-			currentPointsUsed = realPointsSpent;
+			resetsIn.set(resetsInNow);
+			currentPointsUsed.set(realPointsSpent);
 			
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -140,13 +142,13 @@ public class KeyMonitor {
 	/**
 	 * Determine if we need to sleep or not
 	 */
-	private void maybeSleep() {
+	private void maybeSleep(int cPoints) {
 		// if we are super close to our limit
-		float bufferedPoints = currentPointsUsed * 1.1f;
-		if(bufferedPoints >= limit) {
+		float bufferedPoints = cPoints * 1.1f;
+		if(bufferedPoints >= limit.get()) {
 			try {
 				System.out.println("Going to sleep for " + resetsIn + " seconds. So we can reset the API key's");
-				Thread.sleep(resetsIn);
+				Thread.sleep(resetsIn.get());
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
