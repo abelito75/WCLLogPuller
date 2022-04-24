@@ -2,6 +2,7 @@ package com.abesoft.wcl.MassPullLogs.data;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -18,9 +19,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class LogData {
 
 	private Map<String, Field> dataHolder;
+	private Map<String, JsonNode> tables;
+	private Map<String, List<String>> petIDs;
 
 	public LogData() {
 		dataHolder = new LinkedHashMap<>();
+		tables = new LinkedHashMap<>();
+		petIDs = new LinkedHashMap<>();
 		for (DefaultField field : DefaultField.values()) {
 			dataHolder.put(field.getOutputName(), field.getField());
 		}
@@ -148,9 +153,20 @@ public class LogData {
 		setFieldValue(DefaultField.SOURCE_ID.getOutputName(), value);
 	}
 	
-	@SuppressWarnings("unchecked")
+	public void setTables(Map<String, JsonNode> tables) {
+		this.tables = tables;
+	}
+	
 	public Map<String, JsonNode> getTables() {	
-		return (Map<String, JsonNode>)getField("Tables").getValue();
+		return tables;
+	}
+	
+	public void setPetIDs(Map<String, List<String>> petIDs) {
+		this.petIDs = petIDs;
+	}
+	
+	public Map<String, List<String>> getPetIDs() {
+		return petIDs;
 	}
 
 	/**

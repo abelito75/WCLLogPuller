@@ -17,8 +17,10 @@ import java.util.stream.StreamSupport;
 import org.apache.http.auth.AuthenticationException;
 
 import com.abesoft.wcl.MassPullLogs.JsonLib;
+import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
 import com.abesoft.wcl.MassPullLogs.output.CSVOutput;
+import com.abesoft.wcl.MassPullLogs.request.GenericBuilders;
 import com.abesoft.wcl.MassPullLogs.request.GenericGraphQLRequest;
 import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
 import com.abesoft.wcl.MassPullLogs.request.fragments.TableFragment;
@@ -190,7 +192,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		try {
 			getSourceID(data);
 			if (isDirtyData(data)) {
-				System.out.println("Throwing out " + data.getValue("wclLink") + " due to bad data");
+				System.out.println("Throwing out " + data.getValue("wclLink") + " due to in ability to get sourceID");
 				return false;
 			}
 			getData(data);
@@ -221,10 +223,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * @throws AuthenticationException
 	 */
 	public void getSourceID(LogData data) throws UnsupportedEncodingException, AuthenticationException {
-		String queryHeader = "{reportData {report(code: \"";
-		String queryEnder = "\"){masterData{actors{id,name,server,petOwner}}}}}";
-
-		String query = queryHeader + data.getReportCode() + queryEnder;
+		String query = GenericBuilders.buildSourceIDsQuery(data);
 
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		request.buildRequest(query);
@@ -241,7 +240,8 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 		Map<String, List<String>> petIDs = new HashMap<>();
 
-		data.setFieldValue("petIDs", petIDs, false);
+		data.setFieldValue(DefaultField.PET_IDS.getOutputName(), petIDs, false);
+		data.setPetIDs(petIDs);
 
 		pets.forEach(pet -> {
 			String petName = pet.get("name").asText();
@@ -277,19 +277,10 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * @throws UnsupportedEncodingException
 	 */
 	public void getData(LogData dataUnit) throws AuthenticationException, UnsupportedEncodingException {
-		String queryHeader = "{reportData{report(code:\"";
-		String queryMiddle = "\"){";
-		String queryFooter = "}}}";
 
 		List<TableFragment> fragments = generateFragmentForLog(dataUnit);
-
-		String query = queryHeader + dataUnit.getReportCode() + queryMiddle;
-
-		for (TableFragment frag : fragments) {
-			query += frag.buildFragment();
-		}
-
-		query += queryFooter;
+		
+		String query = GenericBuilders.buildDataQuery(dataUnit, fragments);
 
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		request.buildRequest(query);
@@ -302,9 +293,8 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		for (TableFragment frag : fragments) {
 			dataMapping.put(frag.getName(), tableRoot.get(frag.getName()));
 		}
-
-		dataUnit.setFieldValue("Tables", dataMapping);
-
+		
+		dataUnit.setTables(dataMapping);
 	}
 
 	@Override

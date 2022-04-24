@@ -1,6 +1,7 @@
 package com.abesoft.wcl.MassPullLogs.data;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -20,7 +21,7 @@ public enum DefaultField {
 
 	SOURCE_ID(new Field("", true, "SouceID")),
 	
-	TALBES(new Field(new LinkedHashMap<String, JsonNode>(), false, "Tables"));
+	PET_IDS(new Field(new LinkedHashMap<String, List<String>>(), false, "PetIds"));
 
 	private Field field;
 

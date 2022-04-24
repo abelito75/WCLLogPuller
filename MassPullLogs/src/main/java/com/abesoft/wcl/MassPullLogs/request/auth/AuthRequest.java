@@ -1,4 +1,4 @@
-package com.abesoft.wcl.MassPullLogs.request;
+package com.abesoft.wcl.MassPullLogs.request.auth;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,6 +11,9 @@ import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.message.BasicNameValuePair;
+
+import com.abesoft.wcl.MassPullLogs.request.AbstractRequest;
+import com.abesoft.wcl.MassPullLogs.request.WCLURL;
 
 public class AuthRequest extends AbstractRequest {
 

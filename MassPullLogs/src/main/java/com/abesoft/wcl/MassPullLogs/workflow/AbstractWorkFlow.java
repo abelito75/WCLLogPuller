@@ -7,6 +7,7 @@ import java.util.List;
 import com.abesoft.wcl.MassPullLogs.JsonLib;
 import com.abesoft.wcl.MassPullLogs.data.DefaultField;
 import com.abesoft.wcl.MassPullLogs.data.LogData;
+import com.abesoft.wcl.MassPullLogs.request.GenericBuilders;
 import com.abesoft.wcl.MassPullLogs.request.GenericGraphQLRequest;
 import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
 import com.abesoft.wcl.MassPullLogs.request.fragments.CharacterRankingsFragment;
@@ -64,10 +65,8 @@ public abstract class AbstractWorkFlow {
 	public boolean getLogs(int page, Boss boss) {
 		CharacterRankingsFragment toGet = generateFragment();
 		toGet.setPage(page);
-		String queryHeader = "{worldData{encounter(id: ";
-		String queryEnder = "){id,name," + toGet.buildFragment() + "}}}";
-
-		String query = queryHeader + boss.getID() + queryEnder;
+		
+		String query = GenericBuilders.buildTopLogsQuery(boss, toGet);
 
 		GenericGraphQLRequest request = new GenericGraphQLRequest();
 		try {

@@ -56,8 +56,6 @@ public class GenericBuilders {
 		builder.append(unit.getReportCode());
 		builder.append("\"){");
 		for (TableFragment frag : fragment) {
-			builder.append(frag.getName());
-			builder.append(": ");
 			builder.append(frag.buildFragment());
 			builder.append(" ");
 		}

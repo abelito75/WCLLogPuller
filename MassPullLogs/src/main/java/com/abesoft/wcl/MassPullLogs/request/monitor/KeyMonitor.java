@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.abesoft.wcl.MassPullLogs.request;
+package com.abesoft.wcl.MassPullLogs.request.monitor;
 
 import java.io.UnsupportedEncodingException;
 
@@ -108,7 +108,6 @@ public class KeyMonitor {
 		RateLimitRequest request = new RateLimitRequest();
 		try {
 			request.buildRequest(query);
-			request.setAuth();
 			request.fireRequest();
 			
 			JsonNode root = request.getJSON();
@@ -132,7 +131,7 @@ public class KeyMonitor {
 			resetsIn = resetsInNow;
 			currentPointsUsed = realPointsSpent;
 			
-		} catch (UnsupportedEncodingException | AuthenticationException e) {
+		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

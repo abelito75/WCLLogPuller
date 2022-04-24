@@ -1,4 +1,4 @@
-package com.abesoft.wcl.MassPullLogs.request;
+package com.abesoft.wcl.MassPullLogs.request.auth;
 
 import java.io.IOException;
 import java.util.Date;

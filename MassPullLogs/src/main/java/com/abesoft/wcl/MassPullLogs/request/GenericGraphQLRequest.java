@@ -9,6 +9,9 @@ import org.apache.http.auth.AuthenticationException;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
+import com.abesoft.wcl.MassPullLogs.request.auth.AuthToken;
+import com.abesoft.wcl.MassPullLogs.request.monitor.KeyMonitor;
+
 public class GenericGraphQLRequest extends AbstractRequest {
 
 	public GenericGraphQLRequest() {
@@ -33,17 +36,12 @@ public class GenericGraphQLRequest extends AbstractRequest {
 	
 	public boolean fireRequest() {
 		try {
-			return fireRequestImp();
+			KeyMonitor.getMonitor().requestFired();
+			setAuth();
+			return super.fireRequest();
 		} catch (AuthenticationException | UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
-	
-	public boolean fireRequestImp() throws AuthenticationException, UnsupportedEncodingException {
-		KeyMonitor.getMonitor().requestFired();
-		setAuth();
-		return super.fireRequest();
-	}
-
 }
