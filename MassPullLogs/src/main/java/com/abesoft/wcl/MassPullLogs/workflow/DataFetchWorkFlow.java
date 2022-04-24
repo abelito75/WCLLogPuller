@@ -89,9 +89,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 				removeAnonymous();
 
 				System.out.println("None Anonymous Logs: " + logs.size());
-				Iterator<LogData> itty = logs.iterator();
-				while (itty.hasNext()) {
-					LogData data = itty.next();
+				for (LogData data : logs) {
 					attempts = 0;
 					while (attempts < 2 && !runWorkflow(data)) {
 						attempts++;
@@ -99,7 +97,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 					if (attempts == 2) {
 						System.out.println("Attempting to get data for " + data.getValue("wclLink") + " failed.");
-						itty.remove();
 						continue;
 					}
 
