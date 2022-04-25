@@ -35,11 +35,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * Our cute little file writer
 	 */
 	private CSVOutput output;
-	/**
-	 * You get 4 threads by default to run this query
-	 */
-	private int threads;
-	
+
 	/**
 	 * Cute little creator
 	 * @param name The name the file will be
@@ -47,7 +43,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 */
 	public DataFetchWorkFlow(String name) throws IOException {
 		super(name);
-		threads = 4;
 		logs = new ArrayList<>();
 		output = new CSVOutput(new File(name + ".csv"));
 	}
@@ -98,7 +93,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 				List<List<LogData>> segmentData = new ArrayList<>();
 				int i = 0;
 				for(LogData data : logs) {
-					int listToUse = i / (100/threads);
+					int listToUse = i / 25;
 					if(segmentData.size() <= listToUse) {
 						List<LogData> listData = new ArrayList<>();
 						segmentData.add(listData);
@@ -271,15 +266,6 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	public String getName() {
 		return name;
 	}
-	
-	public void setThreads(int threads) {
-		this.threads = threads;
-	}
-	
-	public int getThreads() {
-		return threads;
-	}
-	
 	
 	
 	/**
