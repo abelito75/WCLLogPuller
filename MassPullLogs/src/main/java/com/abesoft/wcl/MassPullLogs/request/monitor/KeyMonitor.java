@@ -7,8 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.http.auth.AuthenticationException;
-
 import com.abesoft.wcl.MassPullLogs.JsonLib;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -72,7 +70,7 @@ public class KeyMonitor {
 		
 		manageRequests(cRequests);
 		
-		if(tRequests != 0 && tRequests % 20 == 0) {
+		if(tRequests != 0 && tRequests % 100 == 0) {
 			gatherInfo(cPoints);
 		}
 		
@@ -89,13 +87,15 @@ public class KeyMonitor {
 		if(currentRequests >= 500) {
 			long waitTime = currentTime - lastRefreshTime.get();
 			try {
+				System.out.println("sleeping due to request spam");
 				Thread.sleep(waitTime);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// get current time again
-			currentTime = System.currentTimeMillis();
+			lastRefreshTime.set(System.currentTimeMillis());
+			requests.set(0);
 		}
 		
 		if(currentTime > lastRefreshTime.get() + second) {

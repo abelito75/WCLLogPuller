@@ -3,8 +3,6 @@ package com.abesoft.wcl.MassPullLogs.data;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 public enum DefaultField {
 
 	BOSS_NAME(new Field("", true, "Boss Name")),
