@@ -9,6 +9,7 @@ import org.apache.http.auth.AuthenticationException;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
+import com.abesoft.wcl.MassPullLogs.framework.App;
 import com.abesoft.wcl.MassPullLogs.request.AbstractRequest;
 import com.abesoft.wcl.MassPullLogs.request.WCLURL;
 import com.abesoft.wcl.MassPullLogs.request.auth.AuthToken;
@@ -20,10 +21,9 @@ public class RateLimitRequest extends AbstractRequest {
 	}
 
 	public void setAuth() throws UnsupportedEncodingException, AuthenticationException {
-		AuthToken token = AuthToken.getToken();
-
-		if (token.isExpired()) {
-			token.setupToken();
+		AuthToken token = App.getApp().getController().getToken();
+		if(token.isExpired()) {
+			App.getApp().getController().generateAuthToken();
 		}
 
 		super.addHeader(new BasicHeader("Authorization", "Bearer " + token.getAccessToken()));

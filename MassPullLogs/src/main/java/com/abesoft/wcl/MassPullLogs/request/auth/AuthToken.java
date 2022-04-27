@@ -9,35 +9,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class AuthToken {
 
-	private static AuthToken token;
-
-	public static AuthToken getToken() {
-		if (token == null) {
-			// synchronized block to remove overhead
-			synchronized (AuthToken.class) {
-				if (token == null) {
-					// if instance is null, initialize
-					token = new AuthToken();
-				}
-
-			}
-		}
-		return token;
-	}
-
 	private String accessToken;
 	private Date expiresAt;
 
-	private AuthToken() {
-		setupToken();
+	public AuthToken(String id, String secret) {
+		setupToken(id, secret);
 	}
 
-	public synchronized void setupToken() {
+	public synchronized void setupToken(String id, String secret) {
 		AuthRequest request;
 		try {
-			request = new AuthRequest();
+			request = new AuthRequest(id, secret);
 			request.fireRequest();
 			JsonNode node = request.getJSON();
+			
+			if(node.get("access_token") == null) {
+				return;
+			}
+			
 			accessToken = node.get("access_token").asText();
 
 			// We remove 30 seconds so we have a little wiggle room
@@ -55,11 +44,11 @@ public class AuthToken {
 	}
 
 	public synchronized boolean isAuthenticated() {
-		return this != null;
+		return accessToken != null;
 	}
 
 	public synchronized boolean isExpired() {
-		return new Date().after(expiresAt);
+		return expiresAt != null && new Date().after(expiresAt);
 	}
 
 	public synchronized boolean isAuthenticatedAndNotExpired() {

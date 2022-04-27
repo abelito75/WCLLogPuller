@@ -43,8 +43,9 @@ public class KeyMonitor {
 	private AtomicInteger totalRequests;
 	private AtomicInteger requests;
 	private AtomicLong lastRefreshTime;
+	private boolean goodFetch;
 	
-	private KeyMonitor() {
+	public KeyMonitor() {
 		limit = new AtomicInteger(0);
 		currentPointsUsed = new AtomicInteger(-5);
 		resetsIn = new AtomicInteger(0);
@@ -52,6 +53,7 @@ public class KeyMonitor {
 		totalRequests = new AtomicInteger(0);
 		requests = new AtomicInteger(0);
 		lastRefreshTime = new AtomicLong(System.currentTimeMillis());
+		goodFetch = false;
 
 		
 		gatherInfo(currentPointsUsed.get());
@@ -132,7 +134,7 @@ public class KeyMonitor {
 			
 			resetsIn.set(resetsInNow);
 			currentPointsUsed.set(realPointsSpent);
-			
+			goodFetch = true;
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -155,6 +157,10 @@ public class KeyMonitor {
 			}
 		}
 		
+	}
+	
+	public boolean isGoodFetch() {
+		return goodFetch;
 	}
 	
 }
