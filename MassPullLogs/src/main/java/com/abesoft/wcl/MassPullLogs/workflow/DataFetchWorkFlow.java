@@ -65,13 +65,13 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 	 * @param pages How many WCL pages you want to query. Each page is 100 logs.
 	 */
 	public void run(int pages) {
-		//System.out.println("Bosses we are attempting to query: " + bosses.stream().map(e -> e.getName()).collect(Collectors.joining(", ")));
-		//System.out.println("Desired Logs Per Boss: " + convertPageToAmount(pages));
+		System.out.println("Bosses we are attempting to query: " + bosses.stream().map(e -> e.getName()).collect(Collectors.joining(", ")));
+		System.out.println("Desired Logs Per Boss: " + convertPageToAmount(pages));
 		for (Boss boss : bosses) {
-			//System.out.println("Starting parsing for boss: " + boss.getName());
+			System.out.println("Starting parsing for boss: " + boss.getName());
 
 			for (int page : IntStream.rangeClosed(1, pages).boxed().toList()) {
-				//System.out.println("Attempting to get " + convertPageToAmount(page - 1) + " to " + convertPageToAmount(page) + " logs for " + boss.getName());
+				System.out.println("Attempting to get " + convertPageToAmount(page - 1) + " to " + convertPageToAmount(page) + " logs for " + boss.getName());
 				logs.clear();
 				int attempts = 0;
 				while (attempts < 2 && !getLogs(page, boss)) {
@@ -80,11 +80,11 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 
 				if (attempts == 2) {
 					// we failed to get the logs so we just move on... sad days
-					//System.out.println("Attempting to get logs " + convertPageToAmount(page - 1) + " to " + convertPageToAmount(page) + " failed for boss " + boss.getName());
+					System.out.println("Attempting to get logs " + convertPageToAmount(page - 1) + " to " + convertPageToAmount(page) + " failed for boss " + boss.getName());
 					continue;
 				}
 
-				//System.out.println("Number of Logs Gathered: " + logs.size());
+				System.out.println("Number of Logs Gathered: " + logs.size());
 
 				removeAnonymous();
 				
@@ -103,7 +103,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 				}
 				
 
-				//System.out.println("None Anonymous Logs: " + logs.size());
+				System.out.println("None Anonymous Logs: " + logs.size());
 				CountDownLatch startSignal = new CountDownLatch(1);
 				CountDownLatch endSignal = new CountDownLatch(segmentData.size());
 				
@@ -120,7 +120,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 					e1.printStackTrace();
 				}
 				
-				//System.out.println("Logs fully processed " + logs.size() + ". Moving onto next bunch");
+				System.out.println("Logs fully processed " + logs.size() + ". Moving onto next bunch");
 				
 			}
 		}
@@ -159,7 +159,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 				}
 
 				if (attempts == 2) {
-					//System.out.println("Attempting to get data for " + data.getValue("wclLink") + " failed.");
+					System.out.println("Attempting to get data for " + data.getValue("wclLink") + " failed.");
 					continue;
 				}
 
@@ -189,7 +189,7 @@ public abstract class DataFetchWorkFlow extends AbstractWorkFlow {
 		try {
 			getSourceID(data);
 			if (isDirtyData(data)) {
-				//System.out.println("Throwing out " + data.getValue("wclLink") + " due to in ability to get sourceID");
+				System.out.println("Throwing out " + data.getValue("wclLink") + " due to in ability to get sourceID");
 				return false;
 			}
 			getData(data);

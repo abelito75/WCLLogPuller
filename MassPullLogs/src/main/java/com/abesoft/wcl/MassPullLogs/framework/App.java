@@ -3,11 +3,9 @@
  */
 package com.abesoft.wcl.MassPullLogs.framework;
 
-import javax.swing.JFrame;
-
+import com.abesoft.wcl.MassPullLogs.gui.scenes.ExampleScene;
 import com.abesoft.wcl.MassPullLogs.gui.scenes.HomeScene;
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  *
@@ -23,7 +21,7 @@ public class App {
 		getApp();
 		// controller needs to be fully setup before we can build the monitor
 		app.getController().generateMonitor();
-		app.getGui().setContent(new HomeScene().getPanel());
+		app.getGui().setContent(new ExampleScene().getPanel());
 		
 	}
 	

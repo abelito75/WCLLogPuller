@@ -9,6 +9,8 @@ import java.util.Map;
 import org.apache.http.auth.AuthenticationException;
 
 import com.abesoft.wcl.MassPullLogs.data.LogData;
+import com.abesoft.wcl.MassPullLogs.framework.App;
+import com.abesoft.wcl.MassPullLogs.gui.scenes.ExampleScene;
 import com.abesoft.wcl.MassPullLogs.request.constants.Boss;
 import com.abesoft.wcl.MassPullLogs.request.constants.ClassSpec;
 import com.abesoft.wcl.MassPullLogs.request.constants.Covenant;
@@ -26,10 +28,13 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Hello world!
  *
  */
-public class App {
+public class TestLocation {
 
 	public static void main(String[] args) throws IOException, InterruptedException, AuthenticationException {
 		
+		App app = App.getApp();
+		app.getController().generateMonitor();
+		app.getGui().setContent(new ExampleScene().getPanel());
 		//testFind();
 		testDataQuery();
 		
@@ -60,7 +65,7 @@ public class App {
 	private static void testDataQuery() throws IOException {
 		Date start = new Date();
 		
-		DataFetchWorkFlow flow = new DataFetchWorkFlow("WWFOData") {
+		DataFetchWorkFlow flow = new DataFetchWorkFlow("ELTData") {
 
 			@Override
 			public CharacterRankingsFragment generateFragment() {
@@ -68,8 +73,7 @@ public class App {
 				toGet.setClassName(ClassSpec.MONK_WINDWALKER);
 				toGet.setSpecName(ClassSpec.MONK_WINDWALKER);
 				toGet.setMetric(Metric.DPS);
-				toGet.setDifficulity(Difficulty.HEROIC);
-				toGet.setCovenantID(Covenant.VENTHYR);
+				toGet.setDifficulity(Difficulty.MYTHIC);
 				toGet.setIncludeCombatantInfo(false);
 				return toGet;
 			}
@@ -79,53 +83,43 @@ public class App {
 				List<Integer> fightID = Arrays.asList(Integer.parseInt(data.getFightID()));
 				int sourceID = Integer.parseInt(data.getSourceID());
 
-				TableFragment stats = new TableFragment("stats");
-				stats.setFightIDs(fightID);
-				stats.setDataType(DataType.SUMMARY);
-				stats.setSourceID(sourceID);
+				TableFragment elt = new TableFragment("ELT");
+				elt.setFightIDs(fightID);
+				elt.setSourceID(sourceID);
+				elt.setDataType(DataType.DAMAGE_DONE);
+				elt.setViewBy(ViewType.ABILITY);
+				elt.setAbilityID(335913);
 
-				TableFragment casts = new TableFragment("casts");
-				casts.setFightIDs(fightID);
-				casts.setDataType(DataType.CASTS);
-				casts.setViewBy(ViewType.SOURCE);
-				casts.setViewOptions(0);
-				casts.setFilterExpression("source.owner.name = \\\"" + data.getPlayerName() + "\\\"");
-				casts.setAbilityID(330898);
-
-				TableFragment summons = new TableFragment("summons");
-				summons.setFightIDs(fightID);
-				summons.setDataType(DataType.SUMMONS);
-				summons.setSourceID(sourceID);
-				summons.setAbilityID(327004);
-				summons.setViewBy(ViewType.SOURCE);
-
-				return Arrays.asList(stats, casts, summons);
+				return Arrays.asList(elt);
 			}
 
 			@Override
 			public void parseData(LogData data) {
-				int haste = 0;
-				int fofCasts = 0;
-				int foSummons = 0;
-
 				Map<String, JsonNode> tables = data.getTables();
 				
-				JsonNode statsNode = tables.get("stats");
-				JsonNode hasteNode = JsonLib.travelDownTree(statsNode, "data/combatantInfo/stats/Haste/max");
-				if(hasteNode != null) {
-					haste = hasteNode.asInt();
-
+				JsonNode statsNode = tables.get("ELT");
+				JsonNode entries = JsonLib.travelDownTree(statsNode, "data/entries");
+				
+				int hitCount = 0;
+				int missCount = 0;
+				
+				for(JsonNode node: entries) {
+					hitCount += node.get("hitCount").asInt();
+					missCount += node.get("missCount").asInt();
 				}
 				
-				JsonNode castsNode = tables.get("casts");
-				fofCasts = JsonLib.totalEntriesFromRoot(castsNode);
-
-				JsonNode summonsNode = tables.get("summons");
-				foSummons = JsonLib.totalEntriesFromRoot(summonsNode);
-
-				data.setFieldValue("haste", haste, true, "Haste");
-				data.setFieldValue("fofCasts", fofCasts, true, "FoF Casts");
-				data.setFieldValue("foSummons", foSummons, true, "Clones");
+				int total = hitCount + missCount;
+				double hitRatio = (hitCount / ((double) total));
+				double missRatio = (missCount / ((double) total));
+				
+				double formatedHitRatio = Math.round(hitRatio * 100) / 100d;
+				double formatedMissRatio = Math.round(missRatio * 100) / 100d;
+				
+				data.setFieldValue("hitCount", hitCount, true, "Hit Count");
+				data.setFieldValue("missCount", missCount, true, "Miss  Count");
+				data.setFieldValue("totalAttempts", total, true, "Total Count");
+				data.setFieldValue("hitRatio", formatedHitRatio, true, "Hit Ratio");
+				data.setFieldValue("missRatio", formatedMissRatio, true, "Miss Ratio");
 			}
 		};
 

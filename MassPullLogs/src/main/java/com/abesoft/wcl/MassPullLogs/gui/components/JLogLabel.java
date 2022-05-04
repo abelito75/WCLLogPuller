@@ -21,8 +21,8 @@ public class JLogLabel extends JLabel {
 	private static final Color DEBUG_COLOR = new Color(112,128,144);
 	private static final Color INFO_COLOR = new Color(49,145,119);
 	private static final Color WARN_COLOR = new Color(255,140,0);
-	private static final Color ERROR_COLOR = new Color(211,33,45);
-	private static final Color FATAL_COLOR = new Color(102,0,0);
+	private static final Color ERROR_COLOR = new Color(208,55,55);
+	private static final Color FATAL_COLOR = new Color(122,18,29);
 
 	
 	/**
